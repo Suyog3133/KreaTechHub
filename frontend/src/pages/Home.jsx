@@ -98,9 +98,79 @@ const Home = () => {
     AOS.init({ duration: 1000, once: false });
   }, []);
 
-  const [budget, setBudget] = useState([15000, 500000]);
   
 
+  // Form state:
+  const [fullname, setFullname] = useState("");
+  const [email, setEmail] = useState("");
+  const [reasons, setReasons] = useState([]); // for checkboxes
+  const [budget, setBudget] = useState([15000, 500000]);
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState("");
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupType, setPopupType] = useState(""); // "success" or "error"
+  
+
+
+  // Checkbox handler for reasons
+  const reasonOptions = ["Web Design", "Mobile App Design", "Software", "Others"];
+  const toggleReason = (option) => {
+    setReasons(prev =>
+      prev.includes(option) ? prev.filter(r => r !== option) : [...prev, option]
+    );
+  };
+
+  // Form submit handler
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("Sending...");
+    // Prepare reason as string (comma separated)
+    const reasonStr = reasons.join(", ");
+    try {
+      const res = await fetch("http://localhost:5000/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullname,
+          email,
+          reason: reasonStr,
+          message,
+          budget: {
+            min: budget[0],
+            max: budget[1],
+          },
+        }),
+      });
+
+      if (res.ok) {
+        setStatus("Message sent successfully!");
+        setPopupMessage("Message sent successfully!");
+        setPopupType("success");
+        setFullname("");
+        setEmail("");
+        setReasons([]);
+        setBudget([15000, 500000]);
+        setMessage("");
+        setTimeout(() => {
+          setPopupMessage("");
+          setPopupType("");
+        }, 5000);
+      } else {
+        const data = await res.json();
+        setPopupMessage(data.error || "Failed to send message.");
+        setPopupType("error");
+        setStatus(`Error: ${data.error || "Failed to send message"}`);
+      }
+    } catch (error) {
+      setStatus("Error: Network error or server down");
+    }
+
+     setStatus(""); // Reset button status
+  setTimeout(() => {
+    setPopupMessage("");
+    setPopupType("");
+  }, 5000);
+  };
   return (
     <div className="bg-white text-white dark:text-white dark:bg-black ">
       <Navbar />
@@ -310,12 +380,15 @@ const Home = () => {
       {/* Contact Form Section */}
       <section className="bg-black py-20 px-4">
         <div className="max-w-4xl mx-auto bg-[#141414] p-8 rounded-2xl shadow-lg border border-white/10 space-y-8">
+                <form onSubmit={handleSubmit}>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <label className="block text-white text-sm font-semibold mb-2">Full Name</label>
               <input
                 type="text"
                 placeholder="Type here"
+                value={fullname}
+                onChange={(e) => setFullname(e.target.value)}
                 className="w-full bg-[#1e1e1e] text-white border-b border-gray-600 outline-none py-3 px-4 rounded-md focus:border-purple-500"
               />
             </div>
@@ -324,17 +397,22 @@ const Home = () => {
               <input
                 type="email"
                 placeholder="Type here"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-[#1e1e1e] text-white border-b border-gray-600 outline-none py-3 px-4 rounded-md focus:border-purple-500"
               />
             </div>
           </div>
+
 
           <div>
             <label className="block text-white text-sm font-semibold mb-4">Why are you contacting us?</label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {["Web Design", "Mobile App Design", "Software", "Others"].map((option, idx) => (
                 <label key={idx} className="flex items-center gap-2 text-gray-300 cursor-pointer">
-                  <input type="checkbox" className="form-checkbox accent-purple-500 h-4 w-4" />
+                  <input type="checkbox" className="form-checkbox accent-purple-500 h-4 w-4" 
+                   checked={reasons.includes(option)}
+                   onChange={() => toggleReason(option)}/>
                   {option}
                 </label>
               ))}
@@ -373,16 +451,42 @@ const Home = () => {
             <textarea
               placeholder="Type here"
               rows="4"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
               className="w-full bg-[#1e1e1e] text-white border-b border-gray-600 outline-none py-3 px-4 rounded-md focus:border-purple-500 resize-none"
             />
           </div>
 
           <div className="text-center pt-6">
-            <button className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-md transition">
-              Submit
-            </button>
+                <button
+        type="submit"
+        disabled={status === "Sending..."}
+        className={`px-6 py-3 rounded-md transition ${
+          status === "Sending..."
+            ? "bg-purple-400 cursor-not-allowed"
+            : "bg-purple-600 hover:bg-purple-700"
+        } text-white`}
+      >
+        {status === "Sending..." ? "Sending..." : "Submit"}
+      </button>
+
+
           </div>
+
+   {popupMessage && (
+    <div
+      className={`mt-4 inline-block px-4 py-2 rounded-md shadow-md transition-opacity duration-500 ease-in-out animate-fade-in-out ${
+        popupType === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+      }`}
+    >
+      {popupMessage}
+    </div>
+  )}
+
+          
+            </form>
         </div>
+        
       </section>
       <Footer />
     </div>

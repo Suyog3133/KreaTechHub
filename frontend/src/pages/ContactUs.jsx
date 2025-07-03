@@ -46,8 +46,29 @@ const ContactUs = () => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit =async (e) => {
     e.preventDefault();
+    try{
+          const res = await fetch("http://localhost:5000/api/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullname: formData.name,
+          email: formData.email,
+          message: formData.message,
+        }),
+      });
+    
+   if (res.ok) {
+        setSubmitted("success");
+        setFormData({ name: "", email: "", message: "" });
+      } else {
+        setSubmitted("fail");
+      }
+    } catch (error) {
+      setSubmitted("fail");
+    }
+
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 4000);
     setFormData({ name: "", email: "", message: "" });

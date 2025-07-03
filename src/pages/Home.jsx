@@ -41,7 +41,7 @@ const services = [
 const features = [
   {
     title: "Expertise",
-    description: "Ourr team consists of highly skilled professionals who have a deep understanding of the digital landscape. We stay updated with the latest industry trends and best practices to deliver cutting-edge solutions.",
+    description: "Our team consists of highly skilled professionals who have a deep understanding of the digital landscape. We stay updated with the latest industry trends and best practices to deliver cutting-edge solutions.",
     icon: expertiseIcon,
   },
   {
